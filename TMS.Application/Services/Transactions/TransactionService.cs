@@ -31,26 +31,26 @@ namespace TMS.Application.Services.Transactions
             return DTOList;
         }
 
-        public async Task<TransactionDTO?> GetByIDAsync(int Id)
+        public async Task<TransactionDTO?> GetByIdAsync(int Id)
         {
             var transaction = await _repo.GetByIdAsync(Id);
             return transaction is null
                 ? null : MapToDTO(transaction);
         }
 
-        public Task<bool> TransferAsync(int FromAccountNumber, int ToAccountNumber, decimal Amount)
+        public Task<bool> TransferAsync(string FromAccountNumber, string ToAccountNumber, decimal Amount)
         {
-            throw new NotImplementedException();
+            return _repo.TransferAsync(FromAccountNumber, ToAccountNumber, Amount);
         }
 
-        public Task<bool> DepositAsync(int AccountNumber, decimal Amount)
+        public async Task<bool> DepositAsync(string AccountNumber, decimal Amount)
         {
-            
+            return await _repo.DepositAsync(AccountNumber, Amount);
         }
 
-        public Task<bool> WithdrawAsync(int AccountNumber, decimal Amount)
+        public async Task<bool> WithdrawAsync(string AccountNumber, decimal Amount)
         {
-            throw new NotImplementedException();
+            return await _repo.WithdrawAsync(AccountNumber, Amount);
         }
 
         private TransactionDTO MapToDTO(Transaction transaction)

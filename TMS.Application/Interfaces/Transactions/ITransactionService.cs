@@ -10,7 +10,7 @@ namespace TMS.Application.Interfaces.Transactions
     public interface ITransactionService
     {
         public Task<IEnumerable<TransactionDTO>> GetAllAsync();
-        public Task<TransactionDTO?> GetByIDAsync(int Id);
+        public Task<TransactionDTO?> GetByIdAsync(int Id);
 
         public Task<bool> WithdrawAsync(string AccountNumber, decimal Amount);
 
