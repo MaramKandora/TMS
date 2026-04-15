@@ -12,8 +12,6 @@
     <Folder Include="Configurations\Transactions\" />
     <Folder Include="Configurations\Users\" />
     <Folder Include="Repositories\Accounts\" />
-    <Folder Include="Repositories\TransactionEntries\" />
-    <Folder Include="Repositories\Transactions\" />
     <Folder Include="Repositories\Users\" />
   </ItemGroup>
 
