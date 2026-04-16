@@ -18,6 +18,6 @@ namespace TMS.Application.Interfaces.TransactionEntries
 
         public Task<IEnumerable<TransactionEntry>> GetAllByAccountIdAsync(int AccountId);
 
-        public Task<IEnumerable<TransactionEntry>> GetAllByAccountIdAndTransactionTypeAsync(int AccountId, TransactionType transactionType);
+        public Task<IEnumerable<TransactionEntry>> GetAllFilteredAsync(TransactionEntriesFilterDTO dto);
     }
 }

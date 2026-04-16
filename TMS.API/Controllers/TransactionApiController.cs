@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Reflection.Metadata.Ecma335;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TMS.Application.DTOs.People;
 using TMS.Application.DTOs.Transactions;
@@ -8,13 +9,19 @@ using TMS.Domain.Entities.Transactions;
 
 namespace TMS.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/TransactionsApi")]
     [ApiController]
     public class TransactionApiController : ControllerBase
     {
         private readonly ITransactionService _TransactionService;
 
-        [HttpGet("GetTransactionById", Name = "GetTransactionById")]
+        public TransactionApiController(ITransactionService TransactionService)
+        {
+            _TransactionService = TransactionService;
+        }
+
+
+        [HttpGet("{id}", Name = "GetTransactionById")]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -44,12 +51,62 @@ namespace TMS.API.Controllers
         }
 
         [HttpPost("Deposit")]
-        public async Task<ActionResult<TransactionDTO>> AddDeposit(DepositTransactionDTO dto)
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<TransactionDTO>> AddDeposit(DepositDTO dto)
         {
-            
-           bool result = await _TransactionService.DepositAsync(dto.AccountNumber, dto.AmountToDeposit);
+
+            int? NewId = await _TransactionService.DepositAsync(dto);
+            if (NewId is null)
+            {
+                return BadRequest($"البيانات المدخلة غير صحيحة");
+            }
+
+            var Created = await _TransactionService.GetByIdAsync((int)NewId);
+
+            return Created is null
+                 ? Problem("حدثت مشكلة عند الإتصال بالخادم")
+                : CreatedAtRoute("GetById", new { id = NewId }, Created);
+
         }
 
+        [HttpPost("Withdraw")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<TransactionDTO>> AddWithdraw(WithdrawDTO dto)
+        {
+            int? NewId = await _TransactionService.WithdrawAsync(dto);
+            if (NewId is null)
+            {
+                return BadRequest($"البيانات المدخلة غير صحيحة");
+            }
 
+            var Created = await _TransactionService.GetByIdAsync((int)NewId);
+
+            return Created is null
+                 ? Problem("حدثت مشكلة عند الإتصال بالخادم")
+                : CreatedAtRoute("GetById", new { id = NewId }, Created);
+        }
+
+        [HttpPost("Transfer")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<TransactionDTO>> AddTransfer(TransferDTO dto)
+        {
+            int? NewId = await _TransactionService.TransferAsync(dto);
+            if (NewId is null)
+            {
+                return BadRequest($"البيانات المدخلة غير صحيحة");
+            }
+
+            var Created = await _TransactionService.GetByIdAsync((int)NewId);
+
+            return Created is null
+                 ? Problem("حدثت مشكلة عند الإتصال بالخادم")
+                : CreatedAtRoute("GetById", new { id = NewId }, Created);
+        }
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using TMS.Application.DTOs.TransactionEntries;
 using TMS.Application.Interfaces.TransactionEntries;
 using TMS.Domain.Entities.TransactionEntries;
@@ -31,9 +32,12 @@ namespace TMS.Infrastructure.Repositories.TransactionEntries
             return await _Context.TransactionEntries.Where(x => x.AccountId == AccountId).ToListAsync();
         }
 
-        public async Task<IEnumerable<TransactionEntry>> GetAllByAccountIdAndTransactionTypeAsync(int AccountId, TransactionType transactionType)
+        public async Task<IEnumerable<TransactionEntry>> GetAllFilteredAsync(TransactionEntriesFilterDTO dto)
         {
-            return await _Context.TransactionEntries.Where(x => x.AccountId == AccountId && x.Transaction.Type == transactionType).ToListAsync();
+
+            return await _Context.TransactionEntries.Where(x => (x.AccountId == dto.AccountId) && (x.Transaction.Type == dto.TransactionType)).ToListAsync();
+          
+
         }
 
         public async Task<TransactionEntry?> GetByIdAsync(int Id)

@@ -12,7 +12,6 @@
     <Folder Include="Interfaces\Accounts\" />
     <Folder Include="Interfaces\Users\" />
     <Folder Include="Services\Accounts\" />
-    <Folder Include="Services\TransactionEntries\" />
     <Folder Include="Services\Users\" />
     <Folder Include="Validators\Accounts\" />
     <Folder Include="Validators\Users\" />
