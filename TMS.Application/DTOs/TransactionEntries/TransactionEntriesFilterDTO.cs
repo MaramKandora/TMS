@@ -11,6 +11,5 @@ namespace TMS.Application.DTOs.TransactionEntries
     {
         public string? AccountNumber { get; set; } = null;
         public TransactionType? TransactionType { get; set; } = null; 
-
     }
 }
