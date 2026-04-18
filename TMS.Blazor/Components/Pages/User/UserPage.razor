@@ -187,7 +187,7 @@
 <label class="text-xs font-semibold text-on-surface-variant px-1">رقم الهاتف</label>
 <input class="w-full bg-surface-container-low border-b-2 border-outline-variant focus:border-primary border-t-0 border-x-0 rounded-t-lg px-4 py-3 outline-none transition-all" placeholder="+966 5x xxxx xxx" type="tel" @bind="newUser.PhoneNumber"/>
 </div>
-<button class="w-full bg-gradient-to-br from-primary to-primary-container text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 active:scale-95 transition-all mt-4" type="submit" disabled="@isSubmitting">
+<button @onclick="HandleAddUserAsync" class="w-full bg-gradient-to-br from-primary to-primary-container text-white py-4 rounded-xl font-bold text-lg hover:opacity-90 active:scale-95 transition-all mt-4" type="submit" disabled=true>
                             إضافة المسؤول
                         </button>
 </form>
@@ -407,6 +407,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        
         await LoadUsersAsync();
     }
 
@@ -432,8 +433,11 @@ else
 
     private async Task<List<UserCardModel>> GetUsersAsync()
     {
-        var response = await Http.GetAsync("http://localhost:5000/api/UsersApi/GetAllUsers");
-        response.EnsureSuccessStatusCode();
+        var response = await Http.GetAsync("https://localhost:7192/api/UsersApi/GetAllUsers");
+        if(!response.IsSuccessStatusCode)
+        {
+            throw new Exception("API request failed");
+        }
 
         var apiUsers = await response.Content.ReadFromJsonAsync<List<UserDTO>>();
 
@@ -442,6 +446,29 @@ else
             : GetSampleUsers();
     }
 
+    private async Task AddUser(UserFormModel form)
+    {
+        try{
+            UserToAddDTO u=new();
+            Random rnd=new Random();
+            u.UserName="Admin000";
+            u.Password=form.Password;
+            u.PersonId=rnd.Next(1,100);
+        var respone= await Http.PostAsJsonAsync("http://localhost:5000/api/UsersApi/AddUser", u);
+        if(respone.IsSuccessStatusCode)
+        {
+            var newstudent = await respone.Content.ReadFromJsonAsync<UserToAddDTO>();
+            Console.WriteLine($"User added with ID: {newstudent?.PersonId} , name: {newstudent?.UserName}, password: {newstudent?.Password}");
+        }
+        else
+        {
+           Console.WriteLine($"Failed to add user. Status code: {respone.StatusCode}");
+        }}
+        catch(Exception ex)
+        {
+            Console.WriteLine($"Error adding user: {ex.Message}");
+        }
+    }
     private async Task HandleAddUserAsync()
     {
         if (isSubmitting || string.IsNullOrWhiteSpace(newUser.FirstName) || string.IsNullOrWhiteSpace(newUser.LastName))
@@ -453,8 +480,10 @@ else
 
         try
         {
-            await Task.CompletedTask;
-            users.Insert(0, CreateCardFromForm(newUser));
+           
+
+           await AddUser(newUser);
+                
             newUser = new UserFormModel();
         }
         finally
@@ -553,6 +582,13 @@ else
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
+    }
+    private sealed class UserModel
+    {
+       
+        public string? userName{get; set;}
+        public string? password{get; set;}
+        public int personId{get;set;}
     }
 }
 
