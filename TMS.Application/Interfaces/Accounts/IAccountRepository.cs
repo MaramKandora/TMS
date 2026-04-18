@@ -9,6 +9,7 @@ namespace TMS.Application.Interfaces.Accounts
         Task<bool> UpdateAsync(Account account);
         Task<bool> DeleteAsync(Account account);
         Task<bool> ActivateAsync(Account account, bool activate);
+        Task<bool> UpdateBalanceAsync(string number, decimal newBalance);
         Task<bool> ChangePasswordAsync(Account account, string newPassword);
         Task<Account?> GetByIdAsync(int id);
         Task<Account?> GetByNumberAsync(string number);

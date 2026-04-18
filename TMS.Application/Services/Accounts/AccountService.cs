@@ -135,5 +135,15 @@ namespace TMS.Application.Services.Accounts
                 : MapToDTO(account);
         }
 
+        public async Task<bool> UpdateBalanceAsync(string number, decimal newBalance)
+        {
+            if (string.IsNullOrWhiteSpace(number) || newBalance < 0) return false;
+
+            var account = await _repo
+                .GetByNumberAsync(number);
+
+            return account is not null && await _repo.UpdateBalanceAsync(number, newBalance);
+        }
+
     }
 }

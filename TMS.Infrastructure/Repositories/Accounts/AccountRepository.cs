@@ -148,5 +148,23 @@ namespace TMS.Infrastructure.Repositories.Accounts
                 .FirstOrDefaultAsync(a => a.Number == number);
         }
 
+        public async Task<bool> UpdateBalanceAsync(string number, decimal newBalance)
+        {
+            if (string.IsNullOrWhiteSpace(number) || newBalance < 0) return false;
+
+            var account = await _context.Accounts
+                .FirstOrDefaultAsync(a => a.Number == number);
+
+            if (account is null) return false;
+
+            account.Balance = newBalance;
+
+            _context.Accounts
+                .Update(account);
+
+            return await _context
+                .SaveChangesAsync() > 0;
+        }
+
     }
 }
