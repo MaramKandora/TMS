@@ -13,7 +13,7 @@ namespace TMS.Application.Interfaces.TransactionEntries
 {
     public interface ITransactionEntryRepository
     {
-        public Task<int> AddEntryAsync(EntryType Type, int TransactionId, int AccountId);
+        public Task<int?> AddEntryAsync(EntryType Type, int TransactionId, int AccountId);
 
         public Task<TransactionEntry?> GetByIdAsync(int Id);
 

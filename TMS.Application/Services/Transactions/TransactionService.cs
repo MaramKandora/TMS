@@ -114,7 +114,7 @@ namespace TMS.Application.Services.Transactions
                     NewTransactionId = await _WithdrawHelperAsync(AccountDTO, dto.Amount);
                     if (NewTransactionId is null)
                     {
-                        return null;// Error insufficient Balance or Amount < 0
+                        return null;// Error insufficient Balance OR Amount < 0 OR internal server error
                     }
 
 
@@ -149,7 +149,7 @@ namespace TMS.Application.Services.Transactions
 
                     if (NewTransactionId is null)
                     {
-                        return null;// Error Amount < 0
+                        return null;// Error Amount < 0 OR internal server error
                     }
                     transaction.Complete();
 
@@ -172,12 +172,16 @@ namespace TMS.Application.Services.Transactions
                 return null;
 
             Account.Balance += Amount;
-            //TODO: update Balance
-            //await _AccountService.UpdateAsync()
+            
+           await _AccountService.UpdateBalanceAsync(Account.Number, Account.Balance);
 
-            int NewTransactionId = await _TransactionRepo.AddAsync(TransactionType.Deposit, Amount);
+            int? NewTransactionId = await _TransactionRepo.AddAsync(TransactionType.Deposit, Amount);
 
-            await _EntryRepo.AddEntryAsync(EntryType.In, NewTransactionId, Account.Id);
+            if (NewTransactionId is null)
+                return null; //Internal error
+
+            if (await _EntryRepo.AddEntryAsync(EntryType.In, (int)NewTransactionId, Account.Id) is null)
+                return null; //Internal error
 
             return NewTransactionId;
         }
@@ -188,12 +192,16 @@ namespace TMS.Application.Services.Transactions
                 return null;
 
             Account.Balance -= Amount;
-            //TODO: update Balance
-           //await _AccountService.UpdateAsync()
 
-            int NewTransactionId = await _TransactionRepo.AddAsync(TransactionType.Withdrawal, Amount);
+            await _AccountService.UpdateBalanceAsync(Account.Number, Account.Balance);
 
-            await _EntryRepo.AddEntryAsync(EntryType.Out, NewTransactionId, Account.Id);
+            int? NewTransactionId = await _TransactionRepo.AddAsync(TransactionType.Withdrawal, Amount);
+
+            if (NewTransactionId is null)
+                return null; //Internal error
+
+            if (await _EntryRepo.AddEntryAsync(EntryType.Out, (int)NewTransactionId, Account.Id) is null) 
+                return null; //Internal error
 
             return NewTransactionId;
         }
@@ -204,15 +212,23 @@ namespace TMS.Application.Services.Transactions
                 return null;
 
             FromAccount.Balance -= Amount;
-            //TODO: update Balance
-            //await _AccountService.UpdateAsync()
-            ToAccount.Balance += Amount;
-            //TODO: update Balance
-            //await _AccountService.UpdateAsync()
 
-            int NewTransactionId = await _TransactionRepo.AddAsync(TransactionType.Transfer, Amount);
-            await _EntryRepo.AddEntryAsync(EntryType.Out, NewTransactionId, FromAccount.Id);
-            await _EntryRepo.AddEntryAsync(EntryType.In, NewTransactionId, ToAccount.Id);
+            await _AccountService.UpdateBalanceAsync(FromAccount.Number, FromAccount.Balance);
+
+            ToAccount.Balance += Amount;
+
+            await _AccountService.UpdateBalanceAsync(ToAccount.Number, ToAccount.Balance);
+
+            int? NewTransactionId = await _TransactionRepo.AddAsync(TransactionType.Transfer, Amount);
+
+            if (NewTransactionId is null)
+                return null; //Internal error
+
+            if (await _EntryRepo.AddEntryAsync(EntryType.Out, (int)NewTransactionId, FromAccount.Id) is null) 
+                return null; //Internal error
+
+            if(await _EntryRepo.AddEntryAsync(EntryType.In, (int)NewTransactionId, ToAccount.Id) is null)
+                return null; //Internal error
 
             return NewTransactionId;
 

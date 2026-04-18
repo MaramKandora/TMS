@@ -38,7 +38,7 @@ namespace TMS.Infrastructure.Repositories.Transactions
 
         }
         
-        public async Task<int> AddAsync(TransactionType Type, decimal Amount)
+        public async Task<int?> AddAsync(TransactionType Type, decimal Amount)
         {
             var NewTransaction = new Transaction()
             {
@@ -47,9 +47,10 @@ namespace TMS.Infrastructure.Repositories.Transactions
                 Date = DateTime.Now
             };
             await _Context.Transactions.AddAsync(NewTransaction);
-            _Context.SaveChanges();
 
-            return NewTransaction.Id;
+            return await _Context.SaveChangesAsync() != 0
+                   ? NewTransaction.Id
+                   : null;
         }
 
     }

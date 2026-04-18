@@ -16,7 +16,7 @@ namespace TMS.Application.Interfaces.Transactions
 
         public Task<IEnumerable<Transaction>> GetAllAsync();
 
-        public Task<int> AddAsync(TransactionType Type, decimal Amount);
+        public Task<int?> AddAsync(TransactionType Type, decimal Amount);
       
 
     }

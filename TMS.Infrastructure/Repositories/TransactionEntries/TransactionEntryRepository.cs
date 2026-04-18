@@ -53,7 +53,7 @@ namespace TMS.Infrastructure.Repositories.TransactionEntries
                 .FirstOrDefaultAsync(x=>x.Id == Id);
         }
 
-        public async Task<int> AddEntryAsync(EntryType Type, int TransactionId, int AccountId)
+        public async Task<int?> AddEntryAsync(EntryType Type, int TransactionId, int AccountId)
         {
             var NewEntry = new TransactionEntry()
             {
@@ -63,9 +63,11 @@ namespace TMS.Infrastructure.Repositories.TransactionEntries
             };
             await _Context.TransactionEntries.AddAsync(NewEntry);
 
-            _Context.SaveChanges();
+            return await _Context.SaveChangesAsync() != 0
+                  ? NewEntry.Id
+                  : null;
 
-            return NewEntry.Id;
+            
         }
     }
 }
