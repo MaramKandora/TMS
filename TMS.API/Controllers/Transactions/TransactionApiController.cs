@@ -1,7 +1,9 @@
 ﻿using System.Reflection.Metadata.Ecma335;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using TMS.Application.DTOs.People;
+using TMS.Application.DTOs.TransactionEntries;
 using TMS.Application.DTOs.Transactions;
 using TMS.Application.Interfaces.Transactions;
 using TMS.Application.Services.Transactions;
@@ -39,16 +41,6 @@ namespace TMS.API.Controllers.Transactions
 
         }
 
-        [HttpGet("GetAll")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<TransactionDTO>>> GetAllTransactions()
-        {
-
-            var result = await _TransactionService.GetAllAsync();
-
-            return Ok(result);
-
-        }
 
         [HttpPost("Deposit")]
         [ProducesResponseType(StatusCodes.Status201Created)]
@@ -95,7 +87,7 @@ namespace TMS.API.Controllers.Transactions
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<TransactionDTO>> AddTransfer(TransferDTO dto)
+        public async Task<ActionResult<TransactionDTO>> AddTransfer(CreateTransferDTO dto)
         {
             int? NewId = await _TransactionService.TransferAsync(dto);
             if (NewId is null)
@@ -108,6 +100,40 @@ namespace TMS.API.Controllers.Transactions
             return Created is null
                  ? Problem("حدثت مشكلة عند الإتصال بالخادم")
                 : CreatedAtRoute("GetTransactionById", new { id = NewId }, Created);
+        }
+
+        [HttpGet("AllTransfers")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<TransactionDTO>>> GetAllTransfers([FromQuery]GetTransferDTO dto)
+        {
+
+            var result = await _TransactionService.GetAllTransfersAsync(dto);
+
+            return Ok(result);
+
+        }
+
+        [HttpGet("AllDeposits")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<TransactionDTO>>> GetAllDeposits(string? AccountNumber = null)
+        {
+
+            var result = await _TransactionService.GetAllDepositsAsync(AccountNumber);
+
+            return Ok(result);
+
+        }
+
+
+        [HttpGet("AllWithdraws")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<TransactionDTO>>> GetAllWithdraws(string? AccountNumber)
+        {
+
+            var result = await _TransactionService.GetAllWithdrawsAsync(AccountNumber);
+
+            return Ok(result);
+
         }
     }
 }

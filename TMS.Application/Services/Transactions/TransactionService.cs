@@ -16,6 +16,7 @@ using TMS.Domain.Entities.Accounts;
 using TMS.Domain.Entities.Transactions;
 using TMS.Domain.Enums.TransactionEntries;
 using TMS.Domain.Enums.Transactions;
+using Transaction = TMS.Domain.Entities.Transactions.Transaction;
 
 namespace TMS.Application.Services.Transactions
 {
@@ -34,18 +35,20 @@ namespace TMS.Application.Services.Transactions
             _AccountService = AccountService;
         }
 
-       
-        public async Task<IEnumerable<TransactionDTO>> GetAllAsync()
+        public async Task<IEnumerable<TransactionDTO>> GetAllDepositsAsync(string? AccountNumber)
         {
-            List<TransactionDTO> DTOList = new List<TransactionDTO>();
-            var transactions = await _TransactionRepo.GetAllAsync();
+            return _MapToDTOList(await _TransactionRepo.GetAllDepositsAsync(AccountNumber));
+        }
 
-            foreach (var transaction in transactions)
-            {
-                DTOList.Add(MapToDTO(transaction));
-            }
+        public async Task<IEnumerable<TransactionDTO>> GetAllWithdrawsAsync(string? AccountNumber)
+        {
+            return _MapToDTOList(await _TransactionRepo.GetAllWithdrawsAsync(AccountNumber));
+        }
 
-            return DTOList;
+        public async Task<IEnumerable<TransactionDTO>> GetAllTransfersAsync(GetTransferDTO dto)
+        {
+
+            return _MapToDTOList(await _TransactionRepo.GetAllTransfersAsync(dto));
         }
 
         public async Task<TransactionDTO?> GetByIdAsync(int Id)
@@ -56,7 +59,7 @@ namespace TMS.Application.Services.Transactions
         }
 
 
-        public async Task<int?> TransferAsync(TransferDTO dto)
+        public async Task<int?> TransferAsync(CreateTransferDTO dto)
         {
 
             int? NewTransactionId = null;
@@ -241,11 +244,26 @@ namespace TMS.Application.Services.Transactions
             return new TransactionDTO()
             {
                 Id = transaction.Id,
-                Amount = transaction.Amount,
-                Date = transaction.Date,
-                Type = transaction.Type,
+                //Amount = transaction.Amount,
+                //Date = transaction.Date,
+                TransactionType = transaction.Type.ToString(),
                 Entries = TransactionEntryService.MapToDTOs(transaction.Entries.AsEnumerable())
             };
         }
+
+        private IEnumerable<TransactionDTO> _MapToDTOList(IEnumerable<Transaction> transactions)
+        {
+            List<TransactionDTO> DTOList = new List<TransactionDTO>();
+
+
+            foreach (var transaction in transactions)
+            {
+                DTOList.Add(MapToDTO(transaction));
+            }
+
+            return DTOList;
+        }
+
+     
     }
 }
