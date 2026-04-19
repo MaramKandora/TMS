@@ -14,8 +14,6 @@
     <Folder Include="Interfaces\Users\" />
     <Folder Include="Services\Accounts\" />
     <Folder Include="Services\Users\" />
-
-    <Folder Include="DTOs\TransactionEntries\" />
     <Folder Include="Interfaces\Accounts\" />
     <Folder Include="Interfaces\TransactionEntries\" />
     <Folder Include="Interfaces\Transactions\" />

@@ -40,7 +40,7 @@ namespace TMS.API.Controllers.TransactionEntries
 
         [HttpGet("GetAll", Name = "GetAll")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<TransactionEntryDTO>>> GetAll([FromQuery]TransactionEntriesFilterDTO dto)
+        public async Task<ActionResult<IEnumerable<TransactionEntryDTO>>> GetAll([FromQuery]TransactionsFilterDTO dto)
         {
 
             var result = await _EntryService.GetAllAsync(dto);
@@ -48,5 +48,15 @@ namespace TMS.API.Controllers.TransactionEntries
             return Ok(result);
 
         }
+
+
+        //public async Task<ActionResult<IEnumerable<TransferDetailsDTO>>> GetAllTransfers(TransactionEntriesFilterDTO dto)
+        //{
+
+        //    var result = await _EntryService.GetAllAsync(dto);
+
+        //    return Ok(result);
+
+        //}
     }
 }

@@ -19,7 +19,7 @@ namespace TMS.Application.Services.TransactionEntries
             _repo = repo;
         }
      
-        public async Task<IEnumerable<TransactionEntryDTO>> GetAllAsync(TransactionEntriesFilterDTO dto)
+        public async Task<IEnumerable<TransactionEntryDTO>> GetAllAsync(TransactionsFilterDTO dto)
         {
 
            var Entries = await _repo.GetAllAsync(dto);
@@ -40,11 +40,10 @@ namespace TMS.Application.Services.TransactionEntries
         {
             return new TransactionEntryDTO()
             {
-                Id = Entry.Id,
+                EntryId = Entry.Id,
                 AccountNumber = Entry.Account.Number,
-                TransactionID = Entry.TransactionId,
-                Amount = Entry.Transaction.Amount,
-                EntryType = Entry.EntryType
+                PersonFullName = Entry.Account.Person.FirstName + " " + Entry.Account.Person.LastName,
+                EntryType = Entry.EntryType.ToString(),
             };
 
         }

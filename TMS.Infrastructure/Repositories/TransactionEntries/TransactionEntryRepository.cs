@@ -22,7 +22,7 @@ namespace TMS.Infrastructure.Repositories.TransactionEntries
             _Context = Context;
         }
 
-        public async Task<IEnumerable<TransactionEntry>> GetAllAsync(TransactionEntriesFilterDTO dto)
+        public async Task<IEnumerable<TransactionEntry>> GetAllAsync(TransactionsFilterDTO dto)
         {
             var Query = _Context.TransactionEntries.Where((x) => true);
 
@@ -41,6 +41,7 @@ namespace TMS.Infrastructure.Repositories.TransactionEntries
             return await Query
                 .Include(x=>x.Transaction)
                 .Include(x=>x.Account)
+                .Include(x=>x.Account.Person)
                 .ToListAsync();
 
         }
@@ -50,6 +51,7 @@ namespace TMS.Infrastructure.Repositories.TransactionEntries
             return await _Context.TransactionEntries
                 .Include(x=>x.Account)
                 .Include(x=>x.Transaction)
+                .Include(x => x.Account.Person)
                 .FirstOrDefaultAsync(x=>x.Id == Id);
         }
 

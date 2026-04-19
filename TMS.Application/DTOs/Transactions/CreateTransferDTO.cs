@@ -7,7 +7,7 @@ using TMS.Domain.Entities.Accounts;
 
 namespace TMS.Application.DTOs.Transactions
 {
-    public class TransferDTO
+    public class CreateTransferDTO
     {
         public required string FromAccountNumber { get; set; }
         public required string ToAccountNumber { get; set; }
