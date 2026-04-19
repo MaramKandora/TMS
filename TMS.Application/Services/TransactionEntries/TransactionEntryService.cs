@@ -40,12 +40,10 @@ namespace TMS.Application.Services.TransactionEntries
         {
             return new TransactionEntryDTO()
             {
-                Id = Entry.Id,
+                EntryId = Entry.Id,
                 AccountNumber = Entry.Account.Number,
                 PersonFullName = Entry.Account.Person.FirstName + " " + Entry.Account.Person.LastName,
-                Amount = Entry.Transaction.Amount,
                 EntryType = Entry.EntryType.ToString(),
-                Date = Entry.Transaction.Date
             };
 
         }

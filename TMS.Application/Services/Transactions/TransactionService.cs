@@ -243,9 +243,9 @@ namespace TMS.Application.Services.Transactions
 
             return new TransactionDTO()
             {
-                Id = transaction.Id,
-                //Amount = transaction.Amount,
-                //Date = transaction.Date,
+                TransactionId = transaction.Id,
+                Amount = transaction.Amount,
+                Date = transaction.Date,
                 TransactionType = transaction.Type.ToString(),
                 Entries = TransactionEntryService.MapToDTOs(transaction.Entries.AsEnumerable())
             };

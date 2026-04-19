@@ -102,7 +102,7 @@ namespace TMS.API.Controllers.Transactions
                 : CreatedAtRoute("GetTransactionById", new { id = NewId }, Created);
         }
 
-        [HttpGet("AllTransfers")]
+        [HttpGet("GetAllTransfers")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<TransactionDTO>>> GetAllTransfers([FromQuery]GetTransferDTO dto)
         {
@@ -113,27 +113,27 @@ namespace TMS.API.Controllers.Transactions
 
         }
 
-        [HttpGet("AllDeposits")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<TransactionDTO>>> GetAllDeposits(string? AccountNumber = null)
-        {
+        //[HttpGet("GetAllDeposits")]
+        //[ProducesResponseType(StatusCodes.Status200OK)]
+        //public async Task<ActionResult<IEnumerable<TransactionDTO>>> GetAllDeposits(string? AccountNumber = null)
+        //{
 
-            var result = await _TransactionService.GetAllDepositsAsync(AccountNumber);
+        //    var result = await _TransactionService.GetAllDepositsAsync(AccountNumber);
 
-            return Ok(result);
+        //    return Ok(result);
 
-        }
+        //}
 
 
-        [HttpGet("AllWithdraws")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<TransactionDTO>>> GetAllWithdraws(string? AccountNumber)
-        {
+        //[HttpGet("GetAllWithdraws")]
+        //[ProducesResponseType(StatusCodes.Status200OK)]
+        //public async Task<ActionResult<IEnumerable<TransactionDTO>>> GetAllWithdraws(string? AccountNumber)
+        //{
 
-            var result = await _TransactionService.GetAllWithdrawsAsync(AccountNumber);
+        //    var result = await _TransactionService.GetAllWithdrawsAsync(AccountNumber);
 
-            return Ok(result);
+        //    return Ok(result);
 
-        }
+        //}
     }
 }

@@ -11,16 +11,14 @@ namespace TMS.Application.DTOs.TransactionEntries
 {
     public class TransactionEntryDTO
     {
-        public int Id { get; set; }
+        public int EntryId { get; set; }
        
         public string EntryType { get; set; } = string.Empty;
-
-        public decimal Amount { get; set; }
 
         public string AccountNumber { get; set; } = null!;
 
         public string PersonFullName { get; set; } = string.Empty;
-        public DateTime Date { get; set; }
+        
        
 
     }
