@@ -43,7 +43,7 @@ namespace TMS.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<UserDTO>> UpdateUser(UserToUpdateDTO usertoupdate)
         {
-            if (usertoupdate is null || string.IsNullOrWhiteSpace(usertoupdate.UserName) || string.IsNullOrWhiteSpace(usertoupdate.Password))
+            if (usertoupdate is null || string.IsNullOrWhiteSpace(usertoupdate.UserName) )
             {
                 return BadRequest($"البيانات المدخلة غير صحيحة");
             }

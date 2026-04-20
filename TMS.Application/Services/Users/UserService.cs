@@ -58,12 +58,17 @@ namespace TMS.Application.Services.Users
         {
             var user = await _repo.GetByIdAsync(dto.Id);
 
-            if (user is null)
+            if (user is null || user.Person is null)
             {
                 return false;
             }
             user.UserName = dto.UserName;
-            user.Password = dto.Password;
+        
+            user.Person.FirstName = dto.FirstName;
+            user.Person.LastName = dto.LastName;
+            user.Person.Email = dto.Email;
+            user.Person.Phone = dto.Phone;
+            user.Person.DateOfBirth = dto.DateOfBirth;
 
             return await _repo.UpdateAsync(user);
         }
