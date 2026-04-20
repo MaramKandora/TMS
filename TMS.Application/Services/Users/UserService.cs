@@ -81,13 +81,17 @@ namespace TMS.Application.Services.Users
         {
             return new UserDTO
             {
+                //user info
                 Id = user.Id,
                 UserName = user.UserName,
-                CreatedByUserId = user.CreatedByUserId,
                 CreatedByUserName = user.CreatedByUser.UserName,
-                PersonId = user.PersonId,
-                PersonFullName = user.Person.FirstName + " " + user.Person.LastName,
-                CreatedAt = user.CreatedAt
+                CreatedAt = user.CreatedAt,
+
+                FirstName = user.Person.FirstName,
+                LastName = user.Person.LastName,
+                Email = user.Person.Email,
+                Phone = user.Person.Phone,
+                DateOfBirth = user.Person.DateOfBirth
             };
         }
 

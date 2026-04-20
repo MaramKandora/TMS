@@ -10,13 +10,17 @@ namespace TMS.Application.DTOs.Users
 {
     public class UserDTO
     {
+        // User Info
         public int Id { get; set; }
         public string UserName { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }  
-        public int CreatedByUserId { get; set; }
         public string CreatedByUserName { get; set; } = string.Empty;  // Flattened from CreatedByUser.UserName
-        public int PersonId { get; set; } 
-        public string PersonFullName { get; set; } = string.Empty; // Useful for UI display
 
-     }
+        // Person Info
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string? Phone { get; set; }
+        public DateTime DateOfBirth { get; set; }
+    }
 }
