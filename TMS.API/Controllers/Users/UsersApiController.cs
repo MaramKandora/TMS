@@ -116,9 +116,6 @@ namespace TMS.API.Controllers.Users
             if (string.IsNullOrWhiteSpace(user.UserName))
                 errors.Add("اسم المستخدم مطلوب");
 
-            if (!string.IsNullOrWhiteSpace(user.Email) && !IsValidEmail(user.Email))
-                errors.Add("البريد الإلكتروني غير صحيح");
-
             if (!string.IsNullOrWhiteSpace(user.Phone) && !IsValidPhone(user.Phone))
                 errors.Add("رقم الهاتف غير صحيح");
 
@@ -128,8 +125,7 @@ namespace TMS.API.Controllers.Users
             if (user.DateOfBirth != default && user.DateOfBirth > DateTime.Now)
                 errors.Add("تاريخ الميلاد غير صحيح");
 
-            if (user.DateOfBirth != default || user.DateOfBirth.Year < 2008)
-                errors.Add("تاريخ الميلاد غير صحيح");
+      
 
 
             return errors;
@@ -160,8 +156,7 @@ namespace TMS.API.Controllers.Users
 
             if (string.IsNullOrWhiteSpace(user.Email))
                 errors.Add("البريد الإلكتروني مطلوب");
-            else if (!IsValidEmail(user.Email))
-                errors.Add("البريد الإلكتروني غير صحيح");
+  
 
             if (!string.IsNullOrWhiteSpace(user.Phone) && !IsValidPhone(user.Phone))
                 errors.Add("رقم الهاتف غير صحيح");
@@ -169,28 +164,13 @@ namespace TMS.API.Controllers.Users
             if (user.DateOfBirth == default)
                 errors.Add("تاريخ الميلاد مطلوب");
 
-            if (user.DateOfBirth != default && user.DateOfBirth > DateTime.Now)
-                errors.Add("تاريخ الميلاد غير صحيح");
 
-            if (user.DateOfBirth != default || user.DateOfBirth.Year < 2008)
+            if (user.DateOfBirth != default && user.DateOfBirth > DateTime.Now)
                 errors.Add("تاريخ الميلاد غير صحيح");
 
 
 
             return errors;
-        }
-
-        private bool IsValidEmail(string email)
-        {
-            try
-            {
-                var addr = new System.Net.Mail.MailAddress(email);
-                return addr.Address == email;
-            }
-            catch
-            {
-                return false;
-            }
         }
 
         private bool IsValidPhone(string phone)
@@ -243,17 +223,18 @@ namespace TMS.API.Controllers.Users
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<ActionResult<User>> LogInUser(UserToLogInDTO loginDto)
         {
-            if (loginDto is null || string.IsNullOrWhiteSpace(loginDto.UserName)|| string.IsNullOrWhiteSpace(loginDto.Password))
+            if (loginDto is null || string.IsNullOrWhiteSpace(loginDto.UserName) || string.IsNullOrWhiteSpace(loginDto.Password))
             {
                 return BadRequest("يجب تعبئة جميع الحقول المطلوبة");
             }
 
-      
+
             var userDTO = await _userService.LogInAsync(loginDto);
 
-            return userDTO is null ? Unauthorized(new { message = "اسم المستخدم أو كلمة المرور غير صحيحة" }): Ok(new { message = "تم تسجيل الدخول بنجاح", data = userDTO });
+            return userDTO is null ? Unauthorized(new { message = "اسم المستخدم أو كلمة المرور غير صحيحة" }) : Ok(new { message = "تم تسجيل الدخول بنجاح", data = userDTO });
 
-         }
+        }
+
     }
 }
 

@@ -139,12 +139,12 @@ namespace TMS.Infrastructure.Repositories.Users
             var user = await _context.Users
                .Include(u => u.Person) // تأكد من جلب بيانات الشخص
                .Include(u => u.CreatedByUser) // تأكد من جلب بيانات المستخدم الذي أنشأ هذا المستخدم
-               .FirstOrDefaultAsync(u => u.UserName == loginDto.UserName);
+               .FirstOrDefaultAsync(u => u.UserName == loginDto.UserName  && u.Password == loginDto.Password);
 
             if (user == null) return null;
 
-            // هنا يجب إضافة كود التحقق من كلمة المرور (Verify Password)
-            // ...
+
+             
 
             return user;
         }
