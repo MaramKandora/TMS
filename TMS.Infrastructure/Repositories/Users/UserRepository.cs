@@ -24,22 +24,84 @@ namespace TMS.Infrastructure.Repositories.Users
         }
         public async Task<int> AddAsync(User user)
         {
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
+            if (user is null || user.Person is null) return -1;
+            using var transaction = _context.Database.BeginTransaction();
+
+            try
+            {
+                await _context.People
+                    .AddAsync(user.Person);
+
+                user.PersonId = user.Person.Id;
+
+                await _context.Users
+                    .AddAsync(user);
+
+                await _context
+                    .SaveChangesAsync();
+
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+            }
 
             return user.Id;
         }
 
         public async Task<bool> UpdateAsync(User user)
         {
-            _context.Users.Update(user);
-            return await _context.SaveChangesAsync() > 0;
+            if (user is null || user.Person is null) return false;
+
+            using var transaction = _context.Database.BeginTransaction();
+
+            try
+            {
+                _context.People
+                    .Update(user.Person);
+
+                _context.Users
+                    .Update(user);
+
+                var result = await _context
+                    .SaveChangesAsync() > 0;
+
+                transaction.Commit();
+                return result;
+            }
+            catch
+            {
+                transaction.Rollback();
+                return false;
+            }
         }
 
         public async Task<bool> DeleteAsync(User user)
         {
-            _context.Users.Remove(user);
-            return await _context.SaveChangesAsync() > 0;
+            if (user is null || user.Person is null) return false;
+
+            using var transaction = _context.Database.BeginTransaction();
+
+            try
+            {
+                _context.People
+                    .Remove(user.Person);
+
+                _context.Users
+                    .Remove(user);
+
+                var result = await _context
+                    .SaveChangesAsync() > 0;
+
+                transaction.Commit();
+                return result;
+            }
+            catch
+            {
+                transaction.Rollback();
+                return false;
+            }
         }
 
         public async Task<User?> GetByIdAsync(int id)
