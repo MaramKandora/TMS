@@ -16,6 +16,7 @@ using TMS.Domain.Entities.Accounts;
 using TMS.Domain.Entities.Transactions;
 using TMS.Domain.Enums.TransactionEntries;
 using TMS.Domain.Enums.Transactions;
+using Transaction = TMS.Domain.Entities.Transactions.Transaction;
 
 namespace TMS.Application.Services.Transactions
 {
@@ -34,18 +35,20 @@ namespace TMS.Application.Services.Transactions
             _AccountService = AccountService;
         }
 
-       
-        public async Task<IEnumerable<TransactionDTO>> GetAllAsync()
+        public async Task<IEnumerable<TransactionDTO>> GetAllDepositsAsync(string? AccountNumber)
         {
-            List<TransactionDTO> DTOList = new List<TransactionDTO>();
-            var transactions = await _TransactionRepo.GetAllAsync();
+            return _MapToDTOList(await _TransactionRepo.GetAllDepositsAsync(AccountNumber));
+        }
 
-            foreach (var transaction in transactions)
-            {
-                DTOList.Add(MapToDTO(transaction));
-            }
+        public async Task<IEnumerable<TransactionDTO>> GetAllWithdrawsAsync(string? AccountNumber)
+        {
+            return _MapToDTOList(await _TransactionRepo.GetAllWithdrawsAsync(AccountNumber));
+        }
 
-            return DTOList;
+        public async Task<IEnumerable<TransactionDTO>> GetAllTransfersAsync(GetTransferDTO dto)
+        {
+
+            return _MapToDTOList(await _TransactionRepo.GetAllTransfersAsync(dto));
         }
 
         public async Task<TransactionDTO?> GetByIdAsync(int Id)
@@ -56,7 +59,7 @@ namespace TMS.Application.Services.Transactions
         }
 
 
-        public async Task<int?> TransferAsync(TransferDTO dto)
+        public async Task<int?> TransferAsync(CreateTransferDTO dto)
         {
 
             int? NewTransactionId = null;
@@ -114,7 +117,7 @@ namespace TMS.Application.Services.Transactions
                     NewTransactionId = await _WithdrawHelperAsync(AccountDTO, dto.Amount);
                     if (NewTransactionId is null)
                     {
-                        return null;// Error insufficient Balance or Amount < 0
+                        return null;// Error insufficient Balance OR Amount < 0 OR internal server error
                     }
 
 
@@ -149,7 +152,7 @@ namespace TMS.Application.Services.Transactions
 
                     if (NewTransactionId is null)
                     {
-                        return null;// Error Amount < 0
+                        return null;// Error Amount < 0 OR internal server error
                     }
                     transaction.Complete();
 
@@ -172,12 +175,16 @@ namespace TMS.Application.Services.Transactions
                 return null;
 
             Account.Balance += Amount;
-            //TODO: update Balance
-            //await _AccountService.UpdateAsync()
+            
+           await _AccountService.UpdateBalanceAsync(Account.Number, Account.Balance);
 
-            int NewTransactionId = await _TransactionRepo.AddAsync(TransactionType.Deposit, Amount);
+            int? NewTransactionId = await _TransactionRepo.AddAsync(TransactionType.Deposit, Amount);
 
-            await _EntryRepo.AddEntryAsync(EntryType.In, NewTransactionId, Account.Id);
+            if (NewTransactionId is null)
+                return null; //Internal error
+
+            if (await _EntryRepo.AddEntryAsync(EntryType.In, (int)NewTransactionId, Account.Id) is null)
+                return null; //Internal error
 
             return NewTransactionId;
         }
@@ -188,12 +195,16 @@ namespace TMS.Application.Services.Transactions
                 return null;
 
             Account.Balance -= Amount;
-            //TODO: update Balance
-           //await _AccountService.UpdateAsync()
 
-            int NewTransactionId = await _TransactionRepo.AddAsync(TransactionType.Withdrawal, Amount);
+            await _AccountService.UpdateBalanceAsync(Account.Number, Account.Balance);
 
-            await _EntryRepo.AddEntryAsync(EntryType.Out, NewTransactionId, Account.Id);
+            int? NewTransactionId = await _TransactionRepo.AddAsync(TransactionType.Withdrawal, Amount);
+
+            if (NewTransactionId is null)
+                return null; //Internal error
+
+            if (await _EntryRepo.AddEntryAsync(EntryType.Out, (int)NewTransactionId, Account.Id) is null) 
+                return null; //Internal error
 
             return NewTransactionId;
         }
@@ -204,15 +215,23 @@ namespace TMS.Application.Services.Transactions
                 return null;
 
             FromAccount.Balance -= Amount;
-            //TODO: update Balance
-            //await _AccountService.UpdateAsync()
-            ToAccount.Balance += Amount;
-            //TODO: update Balance
-            //await _AccountService.UpdateAsync()
 
-            int NewTransactionId = await _TransactionRepo.AddAsync(TransactionType.Transfer, Amount);
-            await _EntryRepo.AddEntryAsync(EntryType.Out, NewTransactionId, FromAccount.Id);
-            await _EntryRepo.AddEntryAsync(EntryType.In, NewTransactionId, ToAccount.Id);
+            await _AccountService.UpdateBalanceAsync(FromAccount.Number, FromAccount.Balance);
+
+            ToAccount.Balance += Amount;
+
+            await _AccountService.UpdateBalanceAsync(ToAccount.Number, ToAccount.Balance);
+
+            int? NewTransactionId = await _TransactionRepo.AddAsync(TransactionType.Transfer, Amount);
+
+            if (NewTransactionId is null)
+                return null; //Internal error
+
+            if (await _EntryRepo.AddEntryAsync(EntryType.Out, (int)NewTransactionId, FromAccount.Id) is null) 
+                return null; //Internal error
+
+            if(await _EntryRepo.AddEntryAsync(EntryType.In, (int)NewTransactionId, ToAccount.Id) is null)
+                return null; //Internal error
 
             return NewTransactionId;
 
@@ -224,12 +243,27 @@ namespace TMS.Application.Services.Transactions
 
             return new TransactionDTO()
             {
-                Id = transaction.Id,
+                TransactionId = transaction.Id,
                 Amount = transaction.Amount,
                 Date = transaction.Date,
-                Type = transaction.Type,
+                TransactionType = transaction.Type.ToString(),
                 Entries = TransactionEntryService.MapToDTOs(transaction.Entries.AsEnumerable())
             };
         }
+
+        private IEnumerable<TransactionDTO> _MapToDTOList(IEnumerable<Transaction> transactions)
+        {
+            List<TransactionDTO> DTOList = new List<TransactionDTO>();
+
+
+            foreach (var transaction in transactions)
+            {
+                DTOList.Add(MapToDTO(transaction));
+            }
+
+            return DTOList;
+        }
+
+     
     }
 }

@@ -3,6 +3,7 @@ using TMS.Application.DTOs.Accounts;
 using TMS.Application.Interfaces.Accounts;
 using TMS.Domain.Entities.Accounts;
 using TMS.Domain.Entities.People;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TMS.Application.Services.Accounts
 {
@@ -29,7 +30,7 @@ namespace TMS.Application.Services.Accounts
             var account = new Account
             {
                 Person = person,
-                Number = DateTime.Now.Ticks.ToString()[^10..],
+                Number = DateTime.Now.Ticks.ToString()[^4..],
                 Password = dto.Password,
                 Balance = 0,
                 IsActive = true,
@@ -143,6 +144,28 @@ namespace TMS.Application.Services.Accounts
                 .GetByNumberAsync(number);
 
             return account is not null && await _repo.UpdateBalanceAsync(number, newBalance);
+        }
+
+        public async Task<AccountDTO?> LoginAsync(AccountToLoginDTO dto)
+        {
+            if (dto is null
+                || string.IsNullOrWhiteSpace(dto.Number) 
+                || string.IsNullOrWhiteSpace(dto.Password))
+            {
+                return null;
+            }
+
+            var account = await _repo
+                .GetByNumberAsync(dto.Number);
+
+            if (account is null) return null;
+
+            var result = account.Number == dto.Number 
+                && account.Password == dto.Password;
+
+            return result 
+                ? MapToDTO(account)
+                : null;
         }
 
     }

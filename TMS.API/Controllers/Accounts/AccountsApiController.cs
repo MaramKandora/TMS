@@ -127,6 +127,24 @@ namespace TMS.API.Controllers.Accounts
                 : Ok(account);
         }
 
+        [HttpGet("GetAccountByNumber/{number}", Name = "GetAccountByNumber")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<AccountDTO>> GetAccountByNumber(string number)
+        {
+            if (string.IsNullOrWhiteSpace(number))
+            {
+                return BadRequest("يجب تعبئة جميع الحقول المطلوبة");
+            }
+
+            var account = await _accountService
+                .GetByNumberAsync(number);
+
+            return account is null
+                ? NotFound("لم يتم العثور على الحساب المطلوب")
+                : Ok(account);
+        }
+
         [HttpGet("GetAllAccounts")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<AccountDTO>>> GetAllAccounts()
@@ -188,6 +206,27 @@ namespace TMS.API.Controllers.Accounts
             return result
                 ? Ok("تم تغيير كلمة المرور بنجاح")
                 : Problem("فشل تغيير كلمة المرور، قد يكون الحساب غير موجود");
+        }
+
+        [HttpPost("Login")] 
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)] 
+        public async Task<ActionResult<AccountDTO>> Login([FromBody] AccountToLoginDTO accountToLoginDTO)
+        {
+            if (accountToLoginDTO is null
+                || string.IsNullOrWhiteSpace(accountToLoginDTO.Number)
+                || string.IsNullOrWhiteSpace(accountToLoginDTO.Password))
+            {
+                return BadRequest("يجب تعبئة جميع الحقول المطلوبة");
+            }
+
+            var account = await _accountService
+                .LoginAsync(accountToLoginDTO);
+
+            return account is null
+                ? Unauthorized("فشل تسجيل الدخول، رقم الحساب أو كلمة المرور خاطئة")
+                : CreatedAtRoute("GetAccountByNumber", new { number = accountToLoginDTO.Number }, account);
         }
 
     }
