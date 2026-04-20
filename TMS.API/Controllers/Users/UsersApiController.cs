@@ -89,6 +89,19 @@ namespace TMS.API.Controllers.Users
             return Ok(user);
         }
 
+        [HttpGet("GetUserByUserName/{username}", Name = "GetUserByUserName")]
+        public async Task<ActionResult<UserDTO>> GetByUserName(string username)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+                return BadRequest("اسم المستخدم غير صحيح"); 
+            var user = await _userService.GetByUsernameAsync(username);
+
+            if (user == null)
+                return NotFound("لم يتم العثور على المستخدم");
+
+            return Ok(user);
+        }
+
         [HttpGet("GetAllUsers")]
         public async Task<ActionResult<IEnumerable<UserDTO>>> GetAllUsers()
         {

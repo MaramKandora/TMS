@@ -120,7 +120,7 @@ namespace TMS.Infrastructure.Repositories.Users
                 .ToListAsync();
         }
 
-       public async Task<bool> ChangePasswordAsync(User user, string newPassword)
+        public async Task<bool> ChangePasswordAsync(User user, string newPassword)
         {
 
             if (user is null) return false;
@@ -136,10 +136,10 @@ namespace TMS.Infrastructure.Repositories.Users
 
         public async Task<User?> LogInAsync(UserToLogInDTO loginDto)
         {
-             var user = await _context.Users
-                .Include(u => u.Person) // تأكد من جلب بيانات الشخص
-                .Include(u => u.CreatedByUser) // تأكد من جلب بيانات المستخدم الذي أنشأ هذا المستخدم
-                .FirstOrDefaultAsync(u => u.UserName == loginDto.UserName);
+            var user = await _context.Users
+               .Include(u => u.Person) // تأكد من جلب بيانات الشخص
+               .Include(u => u.CreatedByUser) // تأكد من جلب بيانات المستخدم الذي أنشأ هذا المستخدم
+               .FirstOrDefaultAsync(u => u.UserName == loginDto.UserName);
 
             if (user == null) return null;
 
@@ -147,6 +147,14 @@ namespace TMS.Infrastructure.Repositories.Users
             // ...
 
             return user;
+        }
+
+        public async Task<User?> GetByUsernameAsync(string username)
+        {
+            return await _context.Users
+                            .Include(u => u.Person)           // Joins the People table
+                            .Include(u => u.CreatedByUser)    // Joins the Users table (Self-reference)
+                            .FirstOrDefaultAsync(u => u.UserName == username);
         }
     }
 }

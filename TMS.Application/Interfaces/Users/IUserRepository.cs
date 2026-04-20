@@ -16,6 +16,7 @@ namespace TMS.Application.Interfaces.Users
         Task<bool> UpdateAsync(User user);
         Task<bool> DeleteAsync(User user);
         Task<User?> GetByIdAsync(int id);
+        Task<User?> GetByUsernameAsync(string username);
         Task<IEnumerable<User>> GetAllAsync();
         Task<bool> ChangePasswordAsync(User user, string newPassword);
         Task<User> LogInAsync(UserToLogInDTO usertologin);

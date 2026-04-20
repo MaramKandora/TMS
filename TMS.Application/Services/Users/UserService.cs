@@ -130,5 +130,12 @@ namespace TMS.Application.Services.Users
 
             return user is null ? null : MapToDTO(user);
         }
+
+        public async Task<UserDTO?> GetByUsernameAsync(string username)
+        {
+            var user = await _repo.GetByUsernameAsync(username);
+
+            return user is null ? null : MapToDTO(user);
+        }
     }
 }
