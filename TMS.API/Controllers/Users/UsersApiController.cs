@@ -1,97 +1,188 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
- using TMS.Application.DTOs.Users;
+using TMS.Application.DTOs.Users;
 using TMS.Application.Interfaces.Users;
+using TMS.Application.Services.Users;
 using TMS.Domain.Entities.Users;
 
-namespace TMS.API.Controllers
+namespace TMS.API.Controllers.Users
 {
-    [Route("api/UsersApi")]
+    [Route("api/users")]
     [ApiController]
     public class UsersApiController : ControllerBase
     {
-        private readonly IUserService _UserService;
+        private readonly IUserService _userService;
 
         public UsersApiController(IUserService UserService)
         {
-            _UserService = UserService;
+            _userService = UserService;
         }
 
         [HttpPost("AddUser")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<UserDTO>> AddUser(UserToAddDTO userToAdd)
+        public async Task<ActionResult<UserDTO>> AddUser([FromBody] UserToAddDTO userToAdd)
         {
-            if (userToAdd is null || string.IsNullOrWhiteSpace(userToAdd.UserName)
-                || string.IsNullOrWhiteSpace(userToAdd.Password))
+            var errors = ValidateUser(userToAdd);
 
-            {
-                return BadRequest($"البيانات المدخلة غير صحيحة");
-            }
+            if (errors.Any())
+                return BadRequest(new { Errors = errors });
 
-            var newId = await _UserService.AddAsync(userToAdd);
-            var created = await _UserService.GetByIdAsync(newId);
+            var newId = await _userService.AddAsync(userToAdd);
+            var created = await _userService.GetByIdAsync(newId);
 
-            return created is null ? Problem("حدثت مشكلة عند الإتصال بالخادم")
-                : CreatedAtRoute("GetUserById", new { id = newId }, created);
+            if (created == null)
+                return StatusCode(500, "حدث خطأ أثناء إنشاء المستخدم");
+
+            return CreatedAtRoute("GetUserById", new { id = newId }, created);
         }
+
 
         [HttpPut("UpdateUser")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<UserDTO>> UpdateUser(UserToUpdateDTO usertoupdate)
+        public async Task<IActionResult> UpdateUser([FromBody] UserToUpdateDTO dto)
         {
-            if (usertoupdate is null || string.IsNullOrWhiteSpace(usertoupdate.UserName) )
-            {
-                return BadRequest($"البيانات المدخلة غير صحيحة");
-            }
+            if (dto == null)
+                return BadRequest("البيانات غير صحيحة");
 
-            var result = await _UserService.UpdateAsync(usertoupdate);
+            var errors = ValidateUpdateUser(dto);
 
-            return result ? Ok("تم تعديل بيانات المستخدم بنجاح") : Problem("حدثت مشكلة عند الإتصال بالخادك");
+            if (errors.Any())
+                return BadRequest(new { Errors = errors });
+
+            var result = await _userService.UpdateAsync(dto);
+
+            if (!result)
+                return StatusCode(500, "حدث خطأ أثناء تحديث المستخدم");
+
+            return NoContent();
         }
 
-        [HttpDelete("DeleteUser")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpDelete("DeleteUser/{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<IEnumerable<UserDTO>>> DeleteUser(int userid)
+        public async Task<IActionResult> DeleteUser(int id)
         {
-            if (userid < 1)
-            {
-                return BadRequest($"المعرف {userid} خاطئ");
-            }
+            if (id < 1)
+                return BadRequest("المعرف غير صحيح");
 
-            var result = await _UserService.DeleteAsync(userid);
+            var result = await _userService.DeleteAsync(id);
 
-            return result ? Ok("تم حذف المستخدم بنجاح") : Problem("حدثت مشكلة عند الإتصال بالخادك");
+            if (!result)
+                return NotFound("المستخدم غير موجود");
+
+            return NoContent();
         }
 
-        [HttpGet("GetUserById", Name = "GetUserById")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpGet("GetUserById/{id}", Name = "GetUserById")]
         public async Task<ActionResult<UserDTO>> GetByUserId(int id)
         {
             if (id < 1)
-            {
-                return BadRequest($"المعرف {id} خاطئ");
-            }
+                return BadRequest("المعرف غير صحيح");
 
-            var userDTO = await _UserService.GetByIdAsync(id);
+            var user = await _userService.GetByIdAsync(id);
 
-            return userDTO is null ? NotFound("لم يتم العثور على المستخدم")
-                : Ok(userDTO);
+            if (user == null)
+                return NotFound("لم يتم العثور على المستخدم");
+
+            return Ok(user);
         }
 
         [HttpGet("GetAllUsers")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<UserDTO>>> GetAllUsers()
         {
-            var result = await _UserService.GetAllAsync();
+            var result = await _userService.GetAllAsync();
             return Ok(result);
+        }
+
+        private List<string> ValidateUpdateUser(UserToUpdateDTO user)
+        {
+            var errors = new List<string>();
+
+            if (string.IsNullOrWhiteSpace(user.UserName))
+                errors.Add("اسم المستخدم مطلوب");
+
+            if (!string.IsNullOrWhiteSpace(user.Email) && !IsValidEmail(user.Email))
+                errors.Add("البريد الإلكتروني غير صحيح");
+
+            if (!string.IsNullOrWhiteSpace(user.Phone) && !IsValidPhone(user.Phone))
+                errors.Add("رقم الهاتف غير صحيح");
+
+            if (user.DateOfBirth == default)
+                errors.Add("تاريخ الميلاد مطلوب");
+
+            if (user.DateOfBirth != default && user.DateOfBirth > DateTime.Now)
+                errors.Add("تاريخ الميلاد غير صحيح");
+
+            if (user.DateOfBirth != default || user.DateOfBirth.Year < 2008)
+                errors.Add("تاريخ الميلاد غير صحيح");
+
+
+            return errors;
+        }
+
+        private List<string> ValidateUser(UserToAddDTO user)
+        {
+            var errors = new List<string>();
+
+            if (string.IsNullOrWhiteSpace(user.UserName))
+                errors.Add("اسم المستخدم مطلوب");
+            else if (user.UserName.Length < 3)
+                errors.Add("اسم المستخدم يجب أن يكون 3 أحرف على الأقل");
+
+            if (string.IsNullOrWhiteSpace(user.Password))
+                errors.Add("كلمة المرور مطلوبة");
+            else if (user.Password.Length < 3)
+                errors.Add("كلمة المرور يجب أن تكون 3 أحرف على الأقل");
+
+            if (user.Password != user.ConfirmPassword)
+                errors.Add("كلمة المرور غير متطابقة");
+
+            if (string.IsNullOrWhiteSpace(user.FirstName))
+                errors.Add("الاسم الأول مطلوب");
+
+            if (string.IsNullOrWhiteSpace(user.LastName))
+                errors.Add("الاسم الأخير مطلوب");
+
+            if (string.IsNullOrWhiteSpace(user.Email))
+                errors.Add("البريد الإلكتروني مطلوب");
+            else if (!IsValidEmail(user.Email))
+                errors.Add("البريد الإلكتروني غير صحيح");
+
+            if (!string.IsNullOrWhiteSpace(user.Phone) && !IsValidPhone(user.Phone))
+                errors.Add("رقم الهاتف غير صحيح");
+
+            if (user.DateOfBirth == default)
+                errors.Add("تاريخ الميلاد مطلوب");
+
+            if (user.DateOfBirth != default && user.DateOfBirth > DateTime.Now)
+                errors.Add("تاريخ الميلاد غير صحيح");
+
+            if (user.DateOfBirth != default || user.DateOfBirth.Year < 2008)
+                errors.Add("تاريخ الميلاد غير صحيح");
+
+
+
+            return errors;
+        }
+
+        private bool IsValidEmail(string email)
+        {
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool IsValidPhone(string phone)
+        {
+            return System.Text.RegularExpressions.Regex.IsMatch(phone, @"^\+?\d{7,15}$");
         }
 
         [HttpPut("ChangePassword")]
@@ -129,7 +220,7 @@ namespace TMS.API.Controllers
                 return BadRequest("كلمة المرور الجديدة لا يمكن أن تكون نفسها القديمة");
             }
 
-            var result = await _UserService.ChangePasswordAsync(changePasswordDto.Id,changePasswordDto.OldPassword, changePasswordDto.NewPassword, changePasswordDto.ConfirmPassword);
+            var result = await _userService.ChangePasswordAsync(changePasswordDto.Id,changePasswordDto.OldPassword, changePasswordDto.NewPassword, changePasswordDto.ConfirmPassword);
 
             return result ? Ok("تم تغيير كلمة المرور بنجاح") : Problem("فشل تغيير كلمة المرور، قد يكون الحساب غير موجود أو كلمة المرور القديمة غير صحيحة");
         }
@@ -145,7 +236,7 @@ namespace TMS.API.Controllers
             }
 
       
-            var userDTO = await _UserService.LogInAsync(loginDto);
+            var userDTO = await _userService.LogInAsync(loginDto);
 
             return userDTO is null ? Unauthorized(new { message = "اسم المستخدم أو كلمة المرور غير صحيحة" }): Ok(new { message = "تم تسجيل الدخول بنجاح", data = userDTO });
 
